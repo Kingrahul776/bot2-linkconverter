@@ -23,11 +23,11 @@ def save_subscribers(subscribers):
     with open(SUBSCRIBERS_FILE, "w") as f:
         json.dump(subscribers, f)
 
-# ✅ Handle "/start <short_code>" - When Users Click the Short Link
+# ✅ Handle "/start <short_code>"
 async def start(update: Update, context: CallbackContext) -> None:
     user_id = update.message.from_user.id
     user_name = update.message.from_user.username
-    args = context.args
+    args = context.args  # Get the tracking short code
 
     if not args:
         await update.message.reply_text("❌ Invalid link. Please request a new link.")
@@ -35,7 +35,7 @@ async def start(update: Update, context: CallbackContext) -> None:
 
     short_code = args[0]
 
-    # ✅ Retrieve and decrypt the private link
+    # ✅ Retrieve the private link from the backend
     response = requests.get(f"{RAILWAY_APP_URL}/get_link?short_code={short_code}")
     result = response.json()
 
@@ -52,16 +52,16 @@ async def start(update: Update, context: CallbackContext) -> None:
         subscribers[str(user_id)] = {"username": user_name, "short_code": short_code}
         save_subscribers(subscribers)
 
-    # ✅ Redirect User to the Channel
-    keyboard = [[InlineKeyboardButton("🚀 Join Channel", url=private_link)]]
+    # ✅ Ask for permission to send messages
+    keyboard = [[InlineKeyboardButton("✅ Allow Messages & Join Channel", url=private_link)]]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     await update.message.reply_text(
-        "✅ Click the button below to join the channel:",
+        "🚀 Click below to join the channel & allow future messages:",
         reply_markup=reply_markup
     )
 
-# ✅ Broadcast Messages
+# ✅ Admin Command to Broadcast Messages
 async def broadcast(update: Update, context: CallbackContext) -> None:
     user_id = update.message.from_user.id
     if user_id != ADMIN_ID:
@@ -91,7 +91,7 @@ async def run_bot():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("broadcast", broadcast))
 
-    print("Bot 2 is running...")
+    print("🚀 Bot 2 is running...")
     await app.initialize()
     await app.start()
     await app.updater.start_polling()
