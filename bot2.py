@@ -1,3 +1,15 @@
+import os
+import logging
+import asyncio
+import jwt  # ✅ Import JWT for encrypted links
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup  # ✅ Fix Missing Imports
+from telegram.ext import (
+    Application, CommandHandler, CallbackQueryHandler, CallbackContext  # ✅ Fix Missing Imports
+)
+
+# ✅ Configure Logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 import jwt  # Import JWT library to decode the encrypted link
 
 SECRET_KEY = "your_secret_key"  # Use the same secret key from Bot 1
