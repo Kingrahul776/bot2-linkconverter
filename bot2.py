@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 # ✅ Bot Token & Admin ID
 BOT2_TOKEN = "7907835521:AAE6FP3yU-aoKYXXEX05kio4SV3j1IJACyc"
-SECRET_KEY = "supersecret"  # ✅ Must be the same as Web API
+SECRET_KEY = "supersecret"  # ✅ Must match Web API's secret key
 ADMIN_ID = 6142725643  # ✅ Admin ID
 
 # ✅ Initialize Bot
