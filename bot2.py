@@ -72,12 +72,12 @@ async def run_bot():
 
 if __name__ == "__main__":
     try:
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            logger.warning("⚠️ Event loop already running. Running bot in a new task.")
-            loop.create_task(run_bot())
-        else:
-            asyncio.run(run_bot())  # ✅ Runs properly if no loop is running
+        loop = asyncio.get_running_loop()
     except RuntimeError:
-        logger.info("🔄 No running loop detected. Running normally.")
-        asyncio.run(run_bot())
+        loop = None
+
+    if loop and loop.is_running():
+        logger.warning("⚠️ Event loop already running. Running bot in a new task.")
+        loop.create_task(run_bot())
+    else:
+        asyncio.run(run_bot())  # ✅ Runs properly if no loop is running
