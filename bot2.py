@@ -1,9 +1,9 @@
 import os
 import logging
-import requests
 import asyncio
+import requests
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, CallbackContext
+from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, CallbackContext
 
 # ✅ Configure Logging
 logging.basicConfig(level=logging.INFO)
@@ -11,67 +11,60 @@ logger = logging.getLogger(__name__)
 
 # ✅ Bot Token (Replace with actual)
 BOT2_TOKEN = "7907835521:AAE6FP3yU-aoKYXXEX05kio4SV3j1IJACyc"
-API_URL = "https://kingcryptocalls.com/store_user"
+ADMIN_ID = 6142725643  # Replace with your Telegram ID
 
 # ✅ Initialize Telegram Bot
 app = Application.builder().token(BOT2_TOKEN).build()
 
+# ✅ Store Users Who Granted Permission
+allowed_users = set()
+
 # ✅ Start Command
 async def start(update: Update, context: CallbackContext):
-    keyboard = [[InlineKeyboardButton("✅ Grant Permission", callback_data="grant_permission")]]
+    keyboard = [
+        [InlineKeyboardButton("✅ Grant Permission", callback_data="grant_access")]
+    ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("🚀 Click the button below to allow message access!", reply_markup=reply_markup)
+    
+    await update.message.reply_text("🚀 Welcome! Grant me permission to send messages.", reply_markup=reply_markup)
 
-# ✅ Handle Permission Request
-async def handle_permission(update: Update, context: CallbackContext):
+# ✅ Handle Button Click (Grant Access)
+async def button_click(update: Update, context: CallbackContext):
     query = update.callback_query
     user_id = query.from_user.id
-    username = query.from_user.username
-    first_name = query.from_user.first_name
-    
-    payload = {"user_id": str(user_id), "username": username, "first_name": first_name}
-    headers = {"Content-Type": "application/json"}
-    
-    try:
-        response = requests.post(API_URL, json=payload, headers=headers)
-        data = response.json()
 
-        if data["success"]:
-            await query.message.reply_text("✅ Permission granted! You will receive updates from us.")
-        else:
-            await query.message.reply_text(f"❌ {data['message']}")
-    except Exception as e:
-        logger.error(f"Error saving user permission: {e}")
-        await query.message.reply_text("⚠️ Error granting permission. Please try again later.")
+    if query.data == "grant_access":
+        allowed_users.add(user_id)
+        await query.answer("✅ Permission granted!")
+        await query.message.edit_text("✅ You have granted permission!")
 
-# ✅ Broadcast Message to All Users
+# ✅ Broadcast Message (Admin Only)
 async def broadcast(update: Update, context: CallbackContext):
-    if update.message.from_user.id != 6142725643:
-        await update.message.reply_text("❌ You are not authorized to send broadcasts.")
+    if update.message.from_user.id != ADMIN_ID:
+        await update.message.reply_text("⛔ You are not authorized to use this command.")
         return
-    
-    message = update.message.text.replace("/broadcast", "").strip()
-    
+
+    message = update.message.text.replace("/broadcast ", "")
     if not message:
-        await update.message.reply_text("❌ Please provide a message to broadcast.")
+        await update.message.reply_text("⚠️ Please provide a message to broadcast.")
         return
-    
-    user_list = []  # Load user IDs from your database/API
-    
-    for user_id in user_list:
+
+    success_count = 0
+    for user_id in allowed_users:
         try:
             await context.bot.send_message(chat_id=user_id, text=message)
+            success_count += 1
         except Exception as e:
-            logger.error(f"Failed to send message to {user_id}: {e}")
+            logger.error(f"❌ Failed to send message to {user_id}: {e}")
 
-    await update.message.reply_text("✅ Broadcast sent!")
+    await update.message.reply_text(f"✅ Broadcast sent to {success_count} users.")
 
 # ✅ Add Handlers
 app.add_handler(CommandHandler("start", start))
-app.add_handler(CallbackQueryHandler(handle_permission, pattern="grant_permission"))
+app.add_handler(CallbackQueryHandler(button_click))
 app.add_handler(CommandHandler("broadcast", broadcast))
 
-# ✅ Run Bot
+# ✅ Run Bot with Proper Event Loop Handling
 async def run_bot():
     logger.info("🚀 Bot 2 is starting...")
     await app.initialize()
