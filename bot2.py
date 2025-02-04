@@ -2,8 +2,12 @@ import os
 import logging
 import jwt
 import asyncio
+import nest_asyncio  # ✅ Fixes event loop issues!
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, CallbackContext
+
+# ✅ Apply Fix for Event Loop Issues
+nest_asyncio.apply()
 
 # ✅ Configure Logging
 logging.basicConfig(level=logging.INFO)
@@ -86,13 +90,6 @@ async def run_bot():
     await app.run_polling()
 
 if __name__ == "__main__":
-    try:
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        loop = None
-
-    if loop and loop.is_running():
-        logger.warning("⚠️ Event loop already running. Running bot in a new task.")
-        loop.create_task(run_bot())
-    else:
-        asyncio.run(run_bot())  # ✅ Runs properly if no loop is running
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(run_bot())  # ✅ No more event loop issues!
