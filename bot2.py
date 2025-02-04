@@ -2,6 +2,7 @@ import os
 import logging
 import asyncio
 import requests
+import nest_asyncio  # ✅ Fixes event loop issues
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     Application, CommandHandler, CallbackQueryHandler, CallbackContext
@@ -71,13 +72,7 @@ async def run_bot():
     await app.run_polling()
 
 if __name__ == "__main__":
-    try:
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        loop = None
-
-    if loop and loop.is_running():
-        logger.warning("⚠️ Event loop already running. Running bot in a new task.")
-        loop.create_task(run_bot())
-    else:
-        asyncio.run(run_bot())  # ✅ Runs properly if no loop is running
+    nest_asyncio.apply()  # ✅ Fixes event loop issue
+    loop = asyncio.get_event_loop()
+    loop.create_task(run_bot())
+    loop.run_forever()
