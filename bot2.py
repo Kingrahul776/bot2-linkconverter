@@ -77,7 +77,10 @@ async def button_click(update: Update, context: CallbackContext):
 
 # ✅ Broadcast Message (Admin Only)
 async def broadcast(update: Update, context: CallbackContext):
-    if update.message.from_user.id != ADMIN_ID:
+    user_id = str(update.message.from_user.id)
+
+    # ✅ Only allow admin (6142725643) to broadcast messages
+    if user_id != "6142725643":
         await update.message.reply_text("⛔ You are not authorized to use this command.")
         return
 
