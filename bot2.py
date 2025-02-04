@@ -1,19 +1,23 @@
 import logging
 import asyncio
-import jwt  # ✅ Import JWT for decoding links
+import jwt
+import nest_asyncio  # ✅ Fixes event loop issues
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, CallbackContext
 
-# ✅ Logging
+# ✅ Apply fix for nested event loops
+nest_asyncio.apply()
+
+# ✅ Configure Logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # ✅ Bot Token & Admin ID
 BOT2_TOKEN = "7907835521:AAE6FP3yU-aoKYXXEX05kio4SV3j1IJACyc"
-SECRET_KEY = "supersecret"  # ✅ Must match Web API's secret key
-ADMIN_ID = 6142725643  # ✅ Admin ID
+SECRET_KEY = "supersecret"  # ✅ Same as Web API's secret key
+ADMIN_ID = 6142725643  # ✅ Your Telegram ID
 
-# ✅ Initialize Bot
+# ✅ Initialize Telegram Bot
 app = Application.builder().token(BOT2_TOKEN).build()
 
 # ✅ Store Users Who Granted Permission
@@ -65,24 +69,42 @@ async def button_click(update: Update, context: CallbackContext):
     await query.message.edit_text("✅ You have granted permission!")
     await context.bot.send_message(chat_id=user_id, text=f"🚀 Click below to join the channel:\n{channel_invite_link}")
 
+# ✅ Broadcast Message (Admin Only)
+async def broadcast(update: Update, context: CallbackContext):
+    if update.message.from_user.id != ADMIN_ID:
+        await update.message.reply_text("⛔ You are not authorized to use this command.")
+        return
+
+    message = update.message.text.replace("/broadcast ", "")
+    if not message:
+        await update.message.reply_text("⚠️ Please provide a message to broadcast.")
+        return
+
+    success_count = 0
+    for user_id in allowed_users:
+        try:
+            await context.bot.send_message(chat_id=user_id, text=message)
+            success_count += 1
+        except Exception as e:
+            logger.error(f"❌ Failed to send message to {user_id}: {e}")
+
+    await update.message.reply_text(f"✅ Broadcast sent to {success_count} users.")
+
 # ✅ Add Handlers
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CallbackQueryHandler(button_click))
+app.add_handler(CommandHandler("broadcast", broadcast))
 
-# ✅ Fix Event Loop Issues
+# ✅ Run Bot with Proper Event Loop Handling
 async def run_bot():
     logger.info("🚀 Bot 2 is starting...")
     await app.initialize()
     await app.run_polling()
 
 if __name__ == "__main__":
-    try:
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        loop = None
-
-    if loop and loop.is_running():
-        logger.warning("⚠️ Event loop already running. Running bot in a new task.")
+    loop = asyncio.get_event_loop()
+    if loop.is_running():
+        logger.warning("⚠️ Event loop already running. Creating new task.")
         loop.create_task(run_bot())
     else:
-        asyncio.run(run_bot())  # ✅ Runs properly if no loop is running
+        asyncio.run(run_bot())  # ✅ Fixes event loop issues
