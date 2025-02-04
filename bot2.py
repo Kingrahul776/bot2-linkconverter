@@ -4,7 +4,9 @@ import jwt
 import asyncio
 import nest_asyncio  # ✅ Fixes event loop issues!
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler, CallbackContext
+from telegram.ext import (
+    Application, CommandHandler, CallbackQueryHandler, CallbackContext
+)
 
 # ✅ Apply Fix for Event Loop Issues
 nest_asyncio.apply()
@@ -19,16 +21,18 @@ BOT2_TOKEN = "7907835521:AAE6FP3yU-aoKYXXEX05kio4SV3j1IJACyc"
 # ✅ Secret Key (Same as in API `web.py`)
 SECRET_KEY = "supersecret"
 
-# ✅ Allowed Users List
-allowed_users = set()
-
 # ✅ Initialize Telegram Bot
 app = Application.builder().token(BOT2_TOKEN).build()
+
+# ✅ Allowed Users List
+allowed_users = set()
 
 # ✅ Start Command - Handles `/start <TOKEN>`
 async def start(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
     args = context.args  # Extract token from `/start <TOKEN>`
+
+    logger.info(f"Received /start command from {user_id} with args: {args}")
 
     if not args:
         await update.message.reply_text("❌ Invalid or missing link. Please request a new one.")
@@ -39,6 +43,7 @@ async def start(update: Update, context: CallbackContext):
         decoded_data = jwt.decode(args[0], SECRET_KEY, algorithms=["HS256"])
         channel_invite_link = decoded_data["link"]
     except Exception as e:
+        logger.error(f"JWT Decode Error: {e}")
         await update.message.reply_text("❌ Failed to decode link. Please request a new one.")
         return
 
@@ -60,6 +65,8 @@ async def button_click(update: Update, context: CallbackContext):
     args = query.data.split(":")  # Extract the encrypted link
     encrypted_link = args[1] if len(args) > 1 else None
 
+    logger.info(f"User {user_id} clicked grant access with data: {query.data}")
+
     if not encrypted_link:
         await query.answer("❌ Invalid request.")
         return
@@ -69,6 +76,7 @@ async def button_click(update: Update, context: CallbackContext):
         decoded_data = jwt.decode(encrypted_link, SECRET_KEY, algorithms=["HS256"])
         channel_invite_link = decoded_data["link"]
     except Exception as e:
+        logger.error(f"JWT Decode Error on button click: {e}")
         await query.answer("❌ Failed to decode link.")
         return
 
