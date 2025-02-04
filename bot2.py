@@ -83,14 +83,20 @@ async def run_bot():
     await app.initialize()
     await app.run_polling()
 
-if __name__ == "__main__":
-    try:
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        loop = None
+import nest_asyncio  # ✅ Fix event loop errors
+nest_asyncio.apply()
 
-    if loop and loop.is_running():
-        logger.warning("⚠️ Event loop already running. Running bot in a new task.")
-        loop.create_task(run_bot())
+# ✅ Fix Event Loop Issue & Run Bot
+async def run_bot():
+    logger.info("🚀 Bot 2 is starting...")
+    await app.initialize()
+    await app.run_polling()
+
+if __name__ == "__main__":
+    loop = asyncio.get_event_loop()
+
+    if loop.is_running():
+        logger.warning("⚠️ Event loop already running. Using alternative method.")
+        loop.create_task(run_bot())  # ✅ Run the bot as an async task
     else:
         asyncio.run(run_bot())  # ✅ Runs properly if no loop is running
