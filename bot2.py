@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 # ✅ Bot 2 Token
 BOT2_TOKEN = "7907835521:AAE6FP3yU-aoKYXXEX05kio4SV3j1IJACyc"
 
-# ✅ Secret Key
+# ✅ Secret Key (Must match Bot 1's Secret Key)
 SECRET_KEY = "supersecret"
 
 # ✅ Initialize Telegram Bot
