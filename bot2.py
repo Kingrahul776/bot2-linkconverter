@@ -3,13 +3,15 @@ import logging
 import asyncio
 import requests
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, CallbackContext
+from telegram.ext import (
+    Application, CommandHandler, CallbackQueryHandler, filters, CallbackContext
+)
 
 # ✅ Configure Logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# ✅ Bot Token (Replace with actual)
+# ✅ Bot Token & Admin ID
 BOT2_TOKEN = "7907835521:AAE6FP3yU-aoKYXXEX05kio4SV3j1IJACyc"
 ADMIN_ID = 6142725643  # Replace with your Telegram ID
 
@@ -19,11 +21,9 @@ app = Application.builder().token(BOT2_TOKEN).build()
 # ✅ Store Users Who Granted Permission
 allowed_users = set()
 
-# ✅ Start Command
+# ✅ Start Command (Asks for Permission)
 async def start(update: Update, context: CallbackContext):
-    keyboard = [
-        [InlineKeyboardButton("✅ Grant Permission", callback_data="grant_access")]
-    ]
+    keyboard = [[InlineKeyboardButton("✅ Grant Permission", callback_data="grant_access")]]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     await update.message.reply_text("🚀 Welcome! Grant me permission to send messages.", reply_markup=reply_markup)
@@ -64,7 +64,7 @@ app.add_handler(CommandHandler("start", start))
 app.add_handler(CallbackQueryHandler(button_click))
 app.add_handler(CommandHandler("broadcast", broadcast))
 
-# ✅ Run Bot with Proper Event Loop Handling
+# ✅ Run Bot with Proper Event Loop Fix
 async def run_bot():
     logger.info("🚀 Bot 2 is starting...")
     await app.initialize()
@@ -72,9 +72,10 @@ async def run_bot():
 
 if __name__ == "__main__":
     try:
-        asyncio.run(run_bot())
-    except RuntimeError:
+        asyncio.get_running_loop()
         logger.warning("⚠️ Event loop already running. Using alternative method.")
         loop = asyncio.get_event_loop()
         loop.create_task(run_bot())
         loop.run_forever()
+    except RuntimeError:
+        asyncio.run(run_bot())  # ✅ Runs properly if no loop is running
