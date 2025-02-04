@@ -2,18 +2,22 @@ import os
 import logging
 import asyncio
 import jwt  # ✅ Import JWT for encrypted links
+import nest_asyncio  # ✅ Fixes event loop issues!
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     Application, CommandHandler, CallbackQueryHandler, CallbackContext
 )
 
+# ✅ Apply fix for "RuntimeError: Event loop is already running"
+nest_asyncio.apply()
+
 # ✅ Configure Logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# ✅ Bot Token & Secret Key (Replace with actual values)
-BOT2_TOKEN = "7907835521:AAE6FP3yU-aoKYXXEX05kio4SV3j1IJACyc"  # Replace with Bot 2's token
-SECRET_KEY = "supersecret"  # Replace with the same secret key from your API
+# ✅ Bot Token & Secret Key (Ensure it matches the API)
+BOT2_TOKEN = "7907835521:AAE6FP3yU-aoKYXXEX05kio4SV3j1IJACyc"  # Replace with your actual Bot 2 token
+SECRET_KEY = "supersecret"  # Ensure this matches the key used in your web API
 
 # ✅ Initialize Telegram Bot
 app = Application.builder().token(BOT2_TOKEN).build()
@@ -92,13 +96,6 @@ async def run_bot():
     await app.run_polling()
 
 if __name__ == "__main__":
-    try:
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        loop = None
-
-    if loop and loop.is_running():
-        logger.warning("⚠️ Event loop already running. Running bot in a new task.")
-        loop.create_task(run_bot())
-    else:
-        asyncio.run(run_bot())  # ✅ Runs properly if no loop is running
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(run_bot())  # ✅ Fix event loop issues
