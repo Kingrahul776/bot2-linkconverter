@@ -64,7 +64,7 @@ app.add_handler(CommandHandler("start", start))
 app.add_handler(CallbackQueryHandler(button_click))
 app.add_handler(CommandHandler("broadcast", broadcast))
 
-# ✅ Run Bot with Proper Event Loop Fix
+# ✅ Run Bot with Fixed Event Loop (Same Fix as Bot 1)
 async def run_bot():
     logger.info("🚀 Bot 2 is starting...")
     await app.initialize()
