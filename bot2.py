@@ -2,20 +2,27 @@ import os
 import logging
 import asyncio
 import jwt  # ✅ Import JWT for encrypted links
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup  # ✅ Fix Missing Imports
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
-    Application, CommandHandler, CallbackQueryHandler, CallbackContext  # ✅ Fix Missing Imports
+    Application, CommandHandler, CallbackQueryHandler, CallbackContext, ContextTypes
 )
 
 # ✅ Configure Logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-import jwt  # Import JWT library to decode the encrypted link
 
-SECRET_KEY = "your_secret_key"  # Use the same secret key from Bot 1
+# ✅ Bot Token (Replace with your Bot 2 token)
+BOT2_TOKEN = "7907835521:AAE6FP3yU-aoKYXXEX05kio4SV3j1IJACyc"
+SECRET_KEY = "supersecret"  # Use the same key from Bot 1 (Flask API)
+
+# ✅ Initialize the bot
+app = Application.builder().token(BOT2_TOKEN).build()
+
+# ✅ Store Users Who Granted Permission
+allowed_users = set()
 
 # ✅ Start Command - Handles Redirection Flow
-async def start(update: Update, context: CallbackContext):
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     args = context.args  # Get the start parameter
 
@@ -41,7 +48,7 @@ async def start(update: Update, context: CallbackContext):
         await update.message.reply_text("🚀 Welcome! Grant me permission to send messages.", reply_markup=reply_markup)
 
 # ✅ Handle Button Click - Grant Access & Redirect
-async def button_click(update: Update, context: CallbackContext):
+async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     user_id = query.from_user.id
     args = query.data.split(":")  # Extract the encrypted link
@@ -65,3 +72,25 @@ async def button_click(update: Update, context: CallbackContext):
 
     # ✅ Redirect user to the correct channel
     await context.bot.send_message(chat_id=user_id, text=f"🚀 Click below to join the channel:\n{channel_invite_link}")
+
+# ✅ Register Handlers
+app.add_handler(CommandHandler("start", start))
+app.add_handler(CallbackQueryHandler(button_click))
+
+# ✅ Run Bot Properly with Async Fix
+async def run_bot():
+    logger.info("🚀 Bot 2 is starting...")
+    await app.initialize()
+    await app.run_polling()
+
+if __name__ == "__main__":
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = None
+
+    if loop and loop.is_running():
+        logger.warning("⚠️ Event loop already running. Running bot in a new task.")
+        loop.create_task(run_bot())
+    else:
+        asyncio.run(run_bot())  # ✅ Runs properly if no loop is running
