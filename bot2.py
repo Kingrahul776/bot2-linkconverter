@@ -71,7 +71,8 @@ async def button_click(update: Update, context: CallbackContext):
     await context.bot.send_message(chat_id=user_id, text=f"🚀 Click below to join the channel:\n{channel_invite_link}")
 
 # ✅ Add Handlers
-app = Application.builder().token("YOUR_BOT2_TOKEN").build()
+BOT2_TOKEN = "7907835521:AAE6FP3yU-aoKYXXEX05kio4SV3j1IJACyc"
+app = Application.builder().token(BOT2_TOKEN).build()
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CallbackQueryHandler(button_click))
 
