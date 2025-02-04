@@ -3,7 +3,7 @@ import logging
 import jwt
 import asyncio
 import nest_asyncio
-from telegram import Update, WebAppInfo, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 from telegram.ext import (
     Application, CommandHandler, CallbackQueryHandler, CallbackContext
 )
@@ -17,16 +17,17 @@ logger = logging.getLogger(__name__)
 
 # ✅ Bot 2 Token & Secret Key
 BOT2_TOKEN = "7907835521:AAE6FP3yU-aoKYXXEX05kio4SV3j1IJACyc"
-SECRET_KEY = "supersecret"  # Must match Bot 1's Secret Key
+SECRET_KEY = "supersecret"  # Same secret key from Bot 1
+DOMAIN = "https://kingcryptocalls.com"  # Your domain
 
-# ✅ Allowed Users List (To store who granted permission)
+# ✅ Allowed Users List (To store users who granted permission)
 allowed_users = set()
 
 # ✅ Initialize Telegram Bot
 app = Application.builder().token(BOT2_TOKEN).build()
 
 
-# ✅ Step 1: Start Command (Triggers Mini App)
+# ✅ Step 1: Start Command (Opens Mini App)
 async def start(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
     args = context.args  
@@ -46,22 +47,18 @@ async def start(update: Update, context: CallbackContext):
         # ✅ If user already gave permission, send the channel link directly
         await update.message.reply_text(f"🚀 You have already granted permission!\n\nClick below to join the channel:\n{channel_invite_link}")
     else:
-        # ❌ User has not granted permission → Show Mini App
-        keyboard = [[
-            InlineKeyboardButton(
-                "✅ Grant Permission",
-                web_app=WebAppInfo(url="https://t.me/vipsignals221bot")  # Replace with your Mini App URL
-            )
-        ]]
+        # ❌ User has not granted permission → Open Mini App
+        miniapp_url = f"{DOMAIN}/miniapp?start={args[0]}"
+        keyboard = [[InlineKeyboardButton("🔓 Open Mini App", web_app=WebAppInfo(url=miniapp_url))]]
         reply_markup = InlineKeyboardMarkup(keyboard)
-        await update.message.reply_text("🚀 Welcome! Grant me permission to send messages.", reply_markup=reply_markup)
+        await update.message.reply_text("🚀 Open Mini App to grant permission!", reply_markup=reply_markup)
 
 
-# ✅ Step 2: Handle Button Click - Grant Permission
-async def button_click(update: Update, context: CallbackContext):
+# ✅ Step 2: Handle Mini App Callback (Grant Permission)
+async def miniapp_callback(update: Update, context: CallbackContext):
     query = update.callback_query
     user_id = query.from_user.id
-    args = query.data.split(":")  
+    args = query.data.split(":")
     encrypted_link = args[1] if len(args) > 1 else None
 
     if not encrypted_link:
@@ -108,7 +105,7 @@ async def broadcast(update: Update, context: CallbackContext):
 
 # ✅ Step 4: Add Handlers
 app.add_handler(CommandHandler("start", start))
-app.add_handler(CallbackQueryHandler(button_click))
+app.add_handler(CallbackQueryHandler(miniapp_callback))
 app.add_handler(CommandHandler("broadcast", broadcast))
 
 
