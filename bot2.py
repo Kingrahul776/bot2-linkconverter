@@ -1,8 +1,8 @@
 import logging
 import asyncio
 import jwt
-import nest_asyncio  # ✅ Fixes event loop issues
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+import nest_asyncio
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, CallbackContext
 
 # ✅ Apply fix for nested event loops
@@ -23,7 +23,7 @@ app = Application.builder().token(BOT2_TOKEN).build()
 # ✅ Store Users Who Granted Permission
 allowed_users = set()
 
-# ✅ Start Command (Handles Redirection)
+# ✅ Start Command (Handles Mini-App Web Redirection)
 async def start(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
     args = context.args  # Extract Token
@@ -39,12 +39,18 @@ async def start(update: Update, context: CallbackContext):
         await update.message.reply_text("❌ Failed to decode link. Please request a new one.")
         return
 
+    # 🔹 If user has already granted permission, send channel link
     if user_id in allowed_users:
         await update.message.reply_text(f"🚀 You have already granted permission!\nClick below to join:\n{channel_invite_link}")
     else:
-        keyboard = [[InlineKeyboardButton("✅ Grant Permission", callback_data=f"grant_access:{args[0]}")]]
+        keyboard = [
+            [InlineKeyboardButton(
+                "✅ Open Mini-App & Grant Permission",
+                web_app=WebAppInfo(url="https://kingcryptocalls.com/miniapp")
+            )]
+        ]
         reply_markup = InlineKeyboardMarkup(keyboard)
-        await update.message.reply_text("🚀 Welcome! Grant permission to continue.", reply_markup=reply_markup)
+        await update.message.reply_text("🚀 Open the mini-app to continue.", reply_markup=reply_markup)
 
 # ✅ Handle Button Click (Grant Permission)
 async def button_click(update: Update, context: CallbackContext):
