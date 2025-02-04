@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 # ✅ Bot Token & Admin ID
 BOT2_TOKEN = "7907835521:AAE6FP3yU-aoKYXXEX05kio4SV3j1IJACyc"
-SECRET_KEY = "supersecret"  # ✅ Same as Web API
+SECRET_KEY = "supersecret"  # ✅ Must be the same as Web API
 ADMIN_ID = 6142725643  # ✅ Admin ID
 
 # ✅ Initialize Bot
@@ -69,11 +69,20 @@ async def button_click(update: Update, context: CallbackContext):
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CallbackQueryHandler(button_click))
 
-# ✅ Run Bot
+# ✅ Fix Event Loop Issues
 async def run_bot():
     logger.info("🚀 Bot 2 is starting...")
     await app.initialize()
     await app.run_polling()
 
 if __name__ == "__main__":
-    asyncio.run(run_bot())
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = None
+
+    if loop and loop.is_running():
+        logger.warning("⚠️ Event loop already running. Running bot in a new task.")
+        loop.create_task(run_bot())
+    else:
+        asyncio.run(run_bot())  # ✅ Runs properly if no loop is running
