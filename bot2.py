@@ -4,7 +4,7 @@ import asyncio
 import requests
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
-    Application, CommandHandler, CallbackQueryHandler, filters, CallbackContext
+    Application, CommandHandler, CallbackQueryHandler, CallbackContext
 )
 
 # ✅ Configure Logging
@@ -64,7 +64,7 @@ app.add_handler(CommandHandler("start", start))
 app.add_handler(CallbackQueryHandler(button_click))
 app.add_handler(CommandHandler("broadcast", broadcast))
 
-# ✅ Run Bot with Fixed Event Loop (Same Fix as Bot 1)
+# ✅ Fix Event Loop Issue & Run Bot
 async def run_bot():
     logger.info("🚀 Bot 2 is starting...")
     await app.initialize()
@@ -72,10 +72,12 @@ async def run_bot():
 
 if __name__ == "__main__":
     try:
-        asyncio.get_running_loop()
-        logger.warning("⚠️ Event loop already running. Using alternative method.")
         loop = asyncio.get_event_loop()
-        loop.create_task(run_bot())
-        loop.run_forever()
+        if loop.is_running():
+            logger.warning("⚠️ Event loop already running. Running bot in a new task.")
+            loop.create_task(run_bot())
+        else:
+            asyncio.run(run_bot())  # ✅ Runs properly if no loop is running
     except RuntimeError:
-        asyncio.run(run_bot())  # ✅ Runs properly if no loop is running
+        logger.info("🔄 No running loop detected. Running normally.")
+        asyncio.run(run_bot())
