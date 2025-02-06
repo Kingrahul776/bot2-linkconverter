@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # ✅ Bot Token & Admin ID
-BOT2_TOKEN = "YOUR_BOT2_TOKEN"
+BOT2_TOKEN = "7907835521:AAE6FP3yU-aoKYXXEX05kio4SV3j1IJACyc"
 ADMIN_ID = 6142725643  # Your Telegram ID
 
 # ✅ Initialize Telegram Bot
