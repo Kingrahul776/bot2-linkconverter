@@ -118,6 +118,6 @@ if __name__ == "__main__":
 
     if loop and loop.is_running():
         logger.warning("⚠️ Event loop already running. Running bot in a new task.")
-        loop.create_task(run_bot())  # ✅ Run bot as an async task
+        asyncio.create_task(run_bot())  # ✅ Run bot as an async task
     else:
         asyncio.run(run_bot())  # ✅ No more event loop issues!
