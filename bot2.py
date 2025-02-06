@@ -1,7 +1,7 @@
 import os
 import logging
 import asyncio
-import jwt  # ✅ Import JWT for encrypted links
+import jwt  # ✅ JWT for encrypted invite links
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     Application, CommandHandler, CallbackQueryHandler, CallbackContext
@@ -13,9 +13,9 @@ logger = logging.getLogger(__name__)
 
 # ✅ Bot Token & Admin ID
 BOT2_TOKEN = "7907835521:AAE6FP3yU-aoKYXXEX05kio4SV3j1IJACyc"
-ADMIN_ID = 6142725643  # ✅ Your Admin Telegram ID
+ADMIN_ID = 6142725643  # ✅ Set Admin ID for broadcasting
 
-# ✅ Secret Key (Ensure it matches Bot 1's key)
+# ✅ Secret Key (SAME as Bot 1)
 SECRET_KEY = "supersecret"
 
 # ✅ Initialize Telegram Bot
@@ -24,50 +24,52 @@ app = Application.builder().token(BOT2_TOKEN).build()
 # ✅ Store Users Who Granted Permission
 allowed_users = set()
 
-# ✅ Start Command (Handles Encrypted Link)
+# ✅ Start Command - Handles Mini-App Redirection
 async def start(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
-    args = context.args  # Get parameters passed via `/start`
+    args = context.args  # Get the start parameter
 
     if not args:
         await update.message.reply_text("❌ Invalid link. Please request a new one.")
         return
 
-    # 🔓 Decode Encrypted Link
+    # 🔓 Decode the encrypted link
     try:
         decoded_data = jwt.decode(args[0], SECRET_KEY, algorithms=["HS256"])
         channel_invite_link = decoded_data["link"]
-    except Exception as e:
-        logger.error(f"JWT Decode Error: {e}")
+    except Exception:
         await update.message.reply_text("❌ Failed to decode link. Please request a new one.")
         return
 
     if user_id in allowed_users:
         # ✅ User has already granted permission
-        await update.message.reply_text(f"🚀 You have already granted permission!\n\nClick below to join the channel:\n{channel_invite_link}")
+        await update.message.reply_text(
+            f"🚀 You have already granted permission!\n\nClick below to join the channel:\n{channel_invite_link}"
+        )
     else:
-        # ❌ User has not granted permission, show button
+        # ❌ User has NOT granted permission
         keyboard = [[InlineKeyboardButton("✅ Grant Permission", callback_data=f"grant_access:{args[0]}")]]
         reply_markup = InlineKeyboardMarkup(keyboard)
-        await update.message.reply_text("🚀 Welcome! Grant me permission to send messages.", reply_markup=reply_markup)
+        await update.message.reply_text(
+            "🚀 Welcome! Grant me permission to send messages.", reply_markup=reply_markup
+        )
 
-# ✅ Handle Button Click (Grant Access & Redirect)
+# ✅ Handle Button Click - Grant Access & Redirect
 async def button_click(update: Update, context: CallbackContext):
     query = update.callback_query
     user_id = query.from_user.id
-    args = query.data.split(":")
+    args = query.data.split(":")  # Extract the encrypted link
     encrypted_link = args[1] if len(args) > 1 else None
 
     if not encrypted_link:
         await query.answer("❌ Invalid request.")
         return
 
-    # 🔓 Decode the Encrypted Link Again
+    # 🔓 Decode the encrypted link
     try:
         decoded_data = jwt.decode(encrypted_link, SECRET_KEY, algorithms=["HS256"])
         channel_invite_link = decoded_data["link"]
-    except Exception as e:
-        logger.error(f"JWT Decode Error: {e}")
+    except Exception:
         await query.answer("❌ Failed to decode link.")
         return
 
@@ -113,9 +115,8 @@ async def run_bot():
 if __name__ == "__main__":
     try:
         # Check if an event loop is already running
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         if loop.is_running():
-            # If the loop is already running, create a task
             logger.warning("⚠️ Event loop already running. Running bot in a new task.")
             loop.create_task(run_bot())
         else:
