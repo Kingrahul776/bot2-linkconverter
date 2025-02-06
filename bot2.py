@@ -51,12 +51,14 @@ async def start(update: Update, context: CallbackContext):
             f"🚀 You have already granted permission!\n\nClick below to join the channel:\n{channel_invite_link}"
         )
     else:
-        # ❌ User has NOT granted permission
-        keyboard = [[InlineKeyboardButton("✅ Grant Permission", callback_data=f"grant_access:{args[0]}")]]
+        # ❌ User has NOT granted permission → Show Mini App
+        miniapp_url = f"https://www.kingcryptocalls.com/miniapp?start={args[0]}"
+        keyboard = [[InlineKeyboardButton("🚀 Open Mini App", url=miniapp_url)]]
         reply_markup = InlineKeyboardMarkup(keyboard)
         await update.message.reply_text(
-            "🚀 Welcome! Grant me permission to send messages.", reply_markup=reply_markup
+            "🚀 Welcome! Click below to open the Mini App and grant permission.", reply_markup=reply_markup
         )
+
 
 # ✅ Handle Button Click - Grant Access & Redirect
 async def button_click(update: Update, context: CallbackContext):
