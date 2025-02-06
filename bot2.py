@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 # ✅ Bot Token & Admin ID
 BOT2_TOKEN = "7907835521:AAE6FP3yU-aoKYXXEX05kio4SV3j1IJACyc"
-ADMIN_ID = 6142725643  # ✅ Replace with your Telegram ID
+ADMIN_ID = 6142725643  # ✅ Your Admin Telegram ID
 
 # ✅ Secret Key (Ensure it matches Bot 1's key)
 SECRET_KEY = "supersecret"
@@ -111,13 +111,10 @@ async def run_bot():
     await app.run_polling()
 
 if __name__ == "__main__":
-    try:
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        loop = None
+    loop = asyncio.get_event_loop()
 
-    if loop and loop.is_running():
+    if loop.is_running():
         logger.warning("⚠️ Event loop already running. Running bot in a new task.")
-        loop.create_task(run_bot())
+        loop.create_task(run_bot())  # ✅ Run bot as an async task
     else:
-        asyncio.run(run_bot())  # ✅ Runs properly if no loop is running
+        loop.run_until_complete(run_bot())  # ✅ No more event loop issues!
