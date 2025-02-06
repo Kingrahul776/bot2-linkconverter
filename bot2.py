@@ -1,7 +1,7 @@
 import os
 import logging
 import asyncio
-import jwt  # ✅ JWT for encrypted invite links
+import jwt  # ✅ Import JWT for encrypted invite links
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     Application, CommandHandler, CallbackQueryHandler, CallbackContext
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 # ✅ Bot Token & Admin ID
 BOT2_TOKEN = "7907835521:AAE6FP3yU-aoKYXXEX05kio4SV3j1IJACyc"
-ADMIN_ID = 6142725643  # ✅ Set Admin ID for broadcasting
+ADMIN_ID = 6142725643  # ✅ Admin for broadcasting
 
 # ✅ Secret Key (SAME as Bot 1)
 SECRET_KEY = "supersecret"
@@ -114,17 +114,13 @@ async def run_bot():
 
 if __name__ == "__main__":
     try:
-        # Check if an event loop is already running
-        loop = asyncio.get_running_loop()
-        if loop.is_running():
-            logger.warning("⚠️ Event loop already running. Running bot in a new task.")
-            loop.create_task(run_bot())
-        else:
-            # If no loop is running, run the bot normally
-            loop.run_until_complete(run_bot())
-    except RuntimeError as e:
-        # Handle cases where no event loop is available
-        if "no running event loop" in str(e):
-            asyncio.run(run_bot())
-        else:
-            logger.error(f"❌ Unexpected error: {e}")
+        # ✅ Check if an event loop is already running
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = None
+
+    if loop and loop.is_running():
+        logger.warning("⚠️ Event loop already running. Running bot in a new task.")
+        loop.create_task(run_bot())
+    else:
+        asyncio.run(run_bot())  # ✅ Runs properly if no loop is running
