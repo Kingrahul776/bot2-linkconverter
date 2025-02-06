@@ -2,10 +2,14 @@ import os
 import logging
 import asyncio
 import jwt  # ✅ Import JWT for encrypted invite links
+import nest_asyncio  # ✅ Fix event loop issues
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     Application, CommandHandler, CallbackQueryHandler, CallbackContext
 )
+
+# ✅ Fix for "RuntimeError: This event loop is already running"
+nest_asyncio.apply()
 
 # ✅ Configure Logging
 logging.basicConfig(level=logging.INFO)
@@ -114,13 +118,11 @@ async def run_bot():
 
 if __name__ == "__main__":
     try:
-        # ✅ Check if an event loop is already running
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        loop = None
-
-    if loop and loop.is_running():
-        logger.warning("⚠️ Event loop already running. Running bot in a new task.")
-        loop.create_task(run_bot())
-    else:
-        asyncio.run(run_bot())  # ✅ Runs properly if no loop is running
+        asyncio.run(run_bot())  # ✅ Runs properly without conflicts
+    except RuntimeError as e:
+        if "This event loop is already running" in str(e):
+            logger.warning("⚠️ Event loop already running. Running bot in a new task.")
+            loop = asyncio.get_event_loop()
+            loop.create_task(run_bot())
+        else:
+            logger.error(f"❌ Unexpected error: {e}")
